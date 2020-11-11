@@ -11,9 +11,9 @@ using namespace std;
 typedef unsigned int uint;
 
 const char END_OF_FILE = '$'; // arbitrary choice
-enum storeTypes { INTEGER, BOOLEAN, PROG_NAME };
-enum modes { VARIABLE, CONSTANT };
-enum allocation { YES, NO };
+enum class storeTypes { INTEGER, BOOLEAN, PROG_NAME };
+enum class modes { VARIABLE, CONSTANT };
+enum class allocation { YES, NO };
 
 class SymbolTableEntry
 {

@@ -89,7 +89,7 @@ void Compiler::progStmt() //token should be "program"
 		processError("semicolon expected");
 	nextToken();
 	code("program", x);
-	insert(x, PROG_NAME, CONSTANT, x, NO, 0);
+	insert(x, storeTypes::PROG_NAME, modes::CONSTANT, x, allocation::NO, 0);
 }
 
 // production 3
@@ -139,7 +139,7 @@ void Compiler::constStmts() //token should be NON_KEY_ID
 	if (nextToken() != "=")
 		processError("\"=\" expected");
 	y = nextToken();
-	if (y != "+" && y != "-" && y != "not" && !isNonKeyId(y) && y != "true" && y != "false" & !isInteger(y))
+	if (y != "+" && y != "-" && y != "not" && !isNonKeyId(y) && y != "true" && y != "false" && !isInteger(y))
 		processError("token to right of \"=\" illegal");
 					if (y == "+" || y == "-")
 					{
@@ -160,7 +160,7 @@ void Compiler::constStmts() //token should be NON_KEY_ID
 		processError("semicolon expected");
 	if (!isInteger(y) or !isBoolean(y))
 		processError("data type of token on the right - hand side must be INTEGER or BOOLEAN");
-	insert(x, whichType(y), CONSTANT, whichValue(y), YES, 1);
+	insert(x, whichType(y), modes::CONSTANT, whichValue(y), allocation::YES, 1);
 	x = nextToken();
 	if (x != "begin" && x != "var" && !isNonKeyId(x))
 		processError("non - keyword identifier, \"begin\", or \"var\" expected");
@@ -183,7 +183,9 @@ void Compiler::varStmts() //token should be NON_KEY_ID
 	y = token;
 	if (nextToken() != ";")
 		processError("semicolon expected");
-	insert(x, y, VARIABLE, "", YES, 1);
+
+	if (y == "integer") insert(x, storeTypes::INTEGER, modes::VARIABLE, "", allocation::YES, 1);
+	else insert(x, storeTypes::BOOLEAN, modes::VARIABLE, "", allocation::YES, 1);
 	if (nextToken() != "begin" && !isNonKeyId(token))
 		processError("non - keyword identifier or \"begin\" expected");
 	if (isNonKeyId(token))
@@ -210,7 +212,7 @@ string Compiler::ids() //token should be NON_KEY_ID
 
 // action routines
 
-void Compiler::insert(string externalName, storeType inType, modes inMode, string inValue, allocation inAlloc, int inUnits)
+void Compiler::insert(string externalName, storeTypes inType, modes inMode, string inValue, allocation inAlloc, int inUnits)
 	//create symbol table entry for each identifier in list of external names
 	//Multiply inserted names are illegal
 {
@@ -230,11 +232,11 @@ void Compiler::insert(string externalName, storeType inType, modes inMode, strin
 				processError("illegal use of keyword");
 			else //create table entry
 			{
-				if (name.at(0) < 97)
+				if (name.at(0) < 97) {
 					symbolTable[name] = SymbolTableEntry(name, inType, inMode, inValue, inAlloc, inUnits);
+				}
 				else
-					symbolTable[name] = SymbolTableEntry(genInternalName(inType), inType, inMode, inValue,
-						inAlloc, inUnits);
+					symbolTable[name] = SymbolTableEntry(genInternalName(inType), inType, inMode, inValue, inAlloc, inUnits);
 			}
 		}
 	}
@@ -245,9 +247,9 @@ storeTypes Compiler::whichType(string name) //tells which data type a name has
 	storeTypes dataType;
 	if (isLiteral(name))
 		if (isBoolean(name))
-			dataType = BOOLEAN;
+			dataType = storeTypes::BOOLEAN;
 		else
-			dataType = INTEGER;
+			dataType = storeTypes::INTEGER;
 	else //name is an identifier and hopefully a constant
 		if (symbolTable.count(name) > 0)
 			dataType = symbolTable[name].getDataType();
@@ -286,13 +288,13 @@ void Compiler::emit(string label, string instruction, string operands, string co
 	objectFile.setf(ios_base::left);
 
 	//Output label in a field of width 8
-	objectFile << setw(8) << label << endl;
+	objectFile << setw(8) << label;
 	
 	//Output instruction in a field of width 8
-	objectFile << setw(8) << instruction << endl;
+	objectFile << setw(8) << instruction;
 	
 	//Output the operands in a field of width 24
-	objectFile << setw(8) << operands << endl;
+	objectFile << setw(8) << operands;
 
 	//Output the comment
 	objectFile << comment << endl;
@@ -300,8 +302,10 @@ void Compiler::emit(string label, string instruction, string operands, string co
 
 void Compiler::emitPrologue(string progName, string operand2)
 {
-	//Output identifying comments at beginning of objectFile
-	//Output the % INCLUDE directives
+	time_t timeNow = time(NULL);
+	objectFile << "; Huan Tran & Duc Huy Nguyen       " << ctime(&timeNow) << endl << endl;
+	objectFile << "%INCLUDE \"Along32.inc\"\n"
+		          "%INCLUDE \"Macros_Along.inc\"\n\n";
 
 	emit("SECTION", ".text");
 	emit("global", "_start", "", "; program" + progName);
@@ -320,10 +324,21 @@ void Compiler::emitStorage()
 	/*for those entries in the symbolTable that have
 				an allocation of YES and a storage mode of CONSTANT
 			{ call emit to output a line to objectFile } */
+
+	for (auto data : symbolTable)
+		if (data.second.getAlloc() == allocation::YES && data.second.getMode() == modes::CONSTANT)
+			emit(data.second.getInternalName(), "dd", data.second.getValue(), "; " + data.first);
+
 	emit("SECTION", ".bss");
 	/*for those entries in the symbolTable that have
 				an allocation of YES and a storage mode of VARIABLE
 			{ call emit to output a line to objectFile }*/
+
+	for (auto data : symbolTable)
+		if (data.second.getAlloc() == allocation::YES && data.second.getMode() == modes::VARIABLE)
+			emit(data.second.getInternalName(), "resd", data.second.getValue(), "; " + data.first);
+
+
 }
 
 // lexical scanner
