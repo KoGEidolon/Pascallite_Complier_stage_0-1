@@ -141,7 +141,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="stage0.cpp" />
-    <ClCompile Include="stage0main.c" />
+    <ClCompile Include="stage0main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stage0.h" />
