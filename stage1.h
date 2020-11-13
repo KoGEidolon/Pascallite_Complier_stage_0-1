@@ -11,9 +11,9 @@ using namespace std;
 
 const char END_OF_FILE = '$';      // arbitrary choice
 
-enum storeTypes {INTEGER, BOOLEAN, PROG_NAME, UNKNOWN};
-enum modes {VARIABLE, CONSTANT};
-enum allocation {YES, NO};
+enum class storeTypes {INTEGER, BOOLEAN, PROG_NAME, UNKNOWN};
+enum class modes {VARIABLE, CONSTANT};
+enum class allocation {YES, NO};
 
 class SymbolTableEntry
 {
