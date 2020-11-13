@@ -269,10 +269,11 @@ void Compiler::insert(string externalName, storeTypes inType, modes inMode, stri
 {
 	string name;
 
-	for (auto itr = externalName.begin(); itr < externalName.end(); ++itr) {
+	auto itr = externalName.begin();
 
+	while (itr < externalName.end()) {
 		name = "";
-		while (*itr != ',' && itr < externalName.end()) {
+		while (itr < externalName.end() && *itr != ',' ) {
 			name += *itr;
 			++itr;
 		}
@@ -285,18 +286,17 @@ void Compiler::insert(string externalName, storeTypes inType, modes inMode, stri
 				processError("illegal use of keyword");
 			else //create table entry
 			{
-				if (name.at(0) < 97) {
-					//symbolTable[name].(name, inType, inMode, inValue, inAlloc, inUnits);
-					symbolTable.insert(pair<string, SymbolTableEntry>(name.substr(0, 15), SymbolTableEntry(name, inType, inMode, inValue, inAlloc, inUnits)));
-					//auto itr = symbolTable.begin();
-
-				}
-				else {
-					//symbolTable[name] = (genInternalName(inType), inType, inMode, inValue, inAlloc, inUnits);
-					symbolTable.insert(pair<string, SymbolTableEntry>(name.substr(0, 15), SymbolTableEntry(genInternalName(inType), inType, inMode, inValue, inAlloc, inUnits)));
-				}
+				if (name.at(0) < 97)
+					symbolTable.insert(pair<string, SymbolTableEntry>(name.substr(0, 15), 
+						SymbolTableEntry(name, inType, inMode, inValue, inAlloc, inUnits)));
+				else
+					symbolTable.insert(pair<string, SymbolTableEntry>(name.substr(0, 15),
+						SymbolTableEntry(genInternalName(inType), inType, inMode, inValue, inAlloc, inUnits)));
 			}
 		}
+
+		if (itr == externalName.end()) break;
+		else ++itr;
 	}
 }
 
