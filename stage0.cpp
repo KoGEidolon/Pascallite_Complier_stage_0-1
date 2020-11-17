@@ -175,8 +175,8 @@ void Compiler::varStmts() //token should be NON_KEY_ID
 	if (nextToken() != ";")
 		processError("semicolon expected");
 
-	if (y == "integer") insert(x, storeTypes::INTEGER, modes::VARIABLE, "", allocation::YES, 1);
-	else insert(x, storeTypes::BOOLEAN, modes::VARIABLE, "", allocation::YES, 1);
+	if (y == "integer") insert(x, storeTypes::INTEGER, modes::VARIABLE, "1", allocation::YES, 1);
+	else insert(x, storeTypes::BOOLEAN, modes::VARIABLE, "1", allocation::YES, 1);
 	if (nextToken() != "begin" && !isNonKeyId(token))
 		processError("non - keyword identifier or \"begin\" expected");
 	if (isNonKeyId(token))
@@ -320,8 +320,13 @@ string Compiler::whichValue(string name) //tells which value a name has
 {
 	string value;
 
-	if (isLiteral(name))
-		value = name;
+	if (isLiteral(name)) {
+		if (name == "true")
+			value = "-1";
+		else if (name == "false")
+			value = "0";
+		else value = name;
+	}
 	else //name is an identifier and hopefully a constant
 		if (symbolTable.count(name) > 0 && symbolTable.at(name).getValue() != "")
 			value = symbolTable.at(name).getValue();
@@ -386,13 +391,9 @@ void Compiler::emitStorage()
 			//{ call emit to output a line to objectFile }
 
 	for (auto data : symbolTable)
-		if (data.second.getAlloc() == allocation::YES && data.second.getMode() == modes::CONSTANT) {
-			if (data.second.getValue() == "false")
-				emit(data.second.getInternalName(), "dd", "0", "; " + data.first);
-			else if (data.second.getValue() == "true")
-				emit(data.second.getInternalName(), "dd", "-1", "; " + data.first);
-			else emit(data.second.getInternalName(), "dd", data.second.getValue(), "; " + data.first);
-		}
+		if (data.second.getAlloc() == allocation::YES && data.second.getMode() == modes::CONSTANT) 
+			emit(data.second.getInternalName(), "dd", data.second.getValue(), "; " + data.first);
+
 	objectFile << endl;
 
 	emit("SECTION", ".bss");
@@ -401,11 +402,8 @@ void Compiler::emitStorage()
 			//{ call emit to output a line to objectFile }
 
 	for (auto data : symbolTable)
-		if (data.second.getAlloc() == allocation::YES && data.second.getMode() == modes::VARIABLE) {
-			if (data.second.getValue() == "")
-				emit(data.second.getInternalName(), "resd", "1", "; " + data.first);
-			else emit(data.second.getInternalName(), "resd", data.second.getValue(), "; " + data.first);
-		}
+		if (data.second.getAlloc() == allocation::YES && data.second.getMode() == modes::VARIABLE)
+			emit(data.second.getInternalName(), "resd", data.second.getValue(), "; " + data.first);
 }
 
 // lexical scanner

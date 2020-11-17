@@ -11,6 +11,8 @@ using namespace std;
 
 const char END_OF_FILE = '$';      // arbitrary choice
 
+typedef unsigned int uint;
+
 enum class storeTypes {INTEGER, BOOLEAN, PROG_NAME, UNKNOWN};
 enum class modes {VARIABLE, CONSTANT};
 enum class allocation {YES, NO};
