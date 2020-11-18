@@ -1,6 +1,4 @@
-# Pascallite Complier stage 0 - 1
-
-- __As of the current, Stage 0 has been completed. Stage 1 is undergoing 75%.__
+# Pascallite Complier stage 0 - 1 (complete)
 
 - This is a project for class CS 4301 - Angelo State University - A Pascallite Complier including stage 0 - 1 - this is meant for educational purpose only.
 
