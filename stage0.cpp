@@ -286,7 +286,7 @@ void Compiler::insert(string externalName, storeTypes inType, modes inMode, stri
 				processError("illegal use of keyword");
 			else //create table entry
 			{
-				if (name.at(0) < 97)
+				if (isupper(name[0])
 					symbolTable.insert(pair<string, SymbolTableEntry>(name.substr(0, 15), 
 						SymbolTableEntry(name, inType, inMode, inValue, inAlloc, inUnits)));
 				else
