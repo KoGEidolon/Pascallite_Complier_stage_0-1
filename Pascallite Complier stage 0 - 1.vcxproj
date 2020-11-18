@@ -19,11 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="stage0.cpp" />
-    <ClCompile Include="stage0main.cpp" />
+    <ClInclude Include="stage1.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stage0.h" />
+    <ClCompile Include="stage1.cpp" />
+    <ClCompile Include="stage1main.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
