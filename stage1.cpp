@@ -46,7 +46,7 @@ void Compiler::createListingTrailer() {
 
 void Compiler::prog() { //token should be "program"
 	if (token != "program")
-		processError("keyword \"program\" expected; found ");
+		processError("keyword \"program\" expected");
 	progStmt();
 	if (token == "const")
 		consts();
@@ -162,7 +162,7 @@ void Compiler::varStmts() { //token should be NON_KEY_ID
 		processError("non - keyword identifier expected");
 	x = ids();
 	if (token != ":")
-		processError("\":\" expected");
+		processError("\":\" expected; found" + token);
 	if (nextToken() != "integer" && token != "boolean")
 		processError("illegal type follows \":\"");
 	y = token;
@@ -202,7 +202,7 @@ void Compiler::execStmts() {      // stage 1, production 2
 	}
 	else if (token == "end");
 
-	else processError("non-keyword identifier, \"read\", \"write\", or \"begin\" expected; found " + token);
+	else processError("non - keyword identifier, \"read\", \"write\", or \"begin\" expected");
 }
 
 void Compiler::execStmt() {       // stage 1, production 3
@@ -219,13 +219,13 @@ void Compiler::execStmt() {       // stage 1, production 3
 		writeStmt();
 	}
 
-	else processError("non-keyword id, read, or write statement expected; found " + token);
+	else processError("non-keyword id, \"read\", or \"write\" expected");
 }
 
 void Compiler::assignStmt() {     // stage 1, production 4
 	string secondOperand, firstOperand;
 	if (!isNonKeyId(token))
-		processError("non-keyword id expected; found " + token);
+		processError("non - keyword identifier expected");
 
 	//Token must be already defined
 	if (symbolTable.count(token) == 0) processError("reference to undefined variable");
@@ -240,7 +240,7 @@ void Compiler::assignStmt() {     // stage 1, production 4
 
 	if (token != "not" && token != "true" && token != "false" && token != "(" && token != "+"
 		&& token != "-" && !isInteger(token) && !isNonKeyId(token))
-		processError("'not', 'true', 'false', '(', '+', '-', integer, or non-keyword id expected; found " + token);
+		processError("\"not\", \"true\", \"false\", \"(\", \"+\", \"-\", integer, or non - keyword identifier expected");
 	else express();
 
 	if (token != ";") processError("';' expected; found " + token);
@@ -251,7 +251,7 @@ void Compiler::assignStmt() {     // stage 1, production 4
 }
 
 void Compiler::readStmt() {       // stage 1, production 5
-	if (token != "read") processError("expected \"read\" for read statement; found " + token);
+	if (token != "read") processError("\"read\" expected");
 
 	nextToken();
 
@@ -281,7 +281,7 @@ void Compiler::readStmt() {       // stage 1, production 5
 
 void Compiler::writeStmt() {      // stage 1, production 7
 	if (token != "write")
-		processError("'write' expected; found " + token);
+		processError("\"write\" expected");
 
 	nextToken();
 
@@ -315,7 +315,7 @@ void Compiler::writeStmt() {      // stage 1, production 7
 void Compiler::express() {        // stage 1, production 9
 	if (token != "not" && token != "true" && token != "false" && token != "(" && token != "+"
 		&& token != "-" && !isInteger(token) && !isNonKeyId(token))
-		processError("'not', 'true', 'false', '(', '+', '-', non-keyword id, or integer expected; found " + token);
+		processError("\"not\", \"true\", \"false\", \"(\", \"+\", \"-\", non - keyword identifier or integer expected");
 
 	term();
 
@@ -327,14 +327,14 @@ void Compiler::expresses() {      // stage 1, production 10
 	string x = "";
 	string operand1, operand2;
 	if (token != "=" && token != "<>" && token != "<=" && token != ">=" && token != "<" && token != ">")
-		processError("'=', '<>', '<=', '>=', '<', or '>' expected; found " + token);
+		processError("\"=\", \"<>\", \"<=\", \">=\", \"<\", or \">\" expected");
 
 	pushOperator(token);
 	nextToken();
 
 	if (token != "not" && token != "true" && token != "false" && token != "(" && token != "+"
 		&& token != "-" && !isInteger(token) && !isNonKeyId(token))
-		processError("'not', 'true', 'false', '(', '+', '-', integer, or non-keyword id expected; found " + token);
+		processError("\"not\", \"true\", \"false\", \"(\", \"+\", \"-\", integer, or non - keyword identifier expected");
 	else term();
 
 	operand1 = popOperand();
@@ -349,7 +349,7 @@ void Compiler::expresses() {      // stage 1, production 10
 void Compiler::term() {           // stage 1, production 11
 	if (token != "not" && token != "true" && token != "false" && token != "(" && token != "+"
 		&& token != "-" && !isInteger(token) && !isNonKeyId(token))
-		processError("'not', 'true', 'false', '(', '+', '-', non-keyword ID, or integer expected; found " + token);
+		processError("\"not\", \"true\", \"false\", \"(\", \"+\", \"-\", integer, or non - keyword identifier expected");
 
 	factor();
 
@@ -361,14 +361,14 @@ void Compiler::terms() {          // stage 1, production 12
 	string operand1, operand2;
 
 	if (token != "+" && token != "-" && token != "or")
-		processError("'+', '-', 'or' expected; found " + token);
+		processError("\"+\", \"-\", or \"or\" expected");
 
 	pushOperator(token);
 	nextToken();
 
 	if (token != "not" && token != "true" && token != "false" && token != "(" && token != "+"
 		&& token != "-" && !isInteger(token) && !isNonKeyId(token))
-		processError("'not', 'true', 'false', '(', '+', '-', non-keyword ID, or integer expected; found " + token);
+		processError("\"not\", \"true\", \"false\", \"(\", \"+\", \"-\", integer, or non - keyword identifier expected");
 	else factor();
 
 	operand1 = popOperand();
@@ -381,7 +381,7 @@ void Compiler::terms() {          // stage 1, production 12
 void Compiler::factor() {         // stage 1, production 13
 	if (token != "not" && token != "true" && token != "false" && token != "(" && token != "+"
 		&& token != "-" && !isInteger(token) && !isNonKeyId(token))
-		processError("'not', 'true', 'false', '(', '+', '-', non-keyword ID, or integer expected; found " + token);
+		processError("\"not\", \"true\", \"false\", \"(\", \"+\", \"-\", integer, or non - keyword identifier expected");
 
 	part();
 
@@ -397,14 +397,14 @@ void Compiler::factors() {        // stage 1, production 14
 	string x = "";
 	string operand1, operand2;
 	if (token != "*" && token != "div" && token != "mod" && token != "and")
-		processError("'*', 'div', 'mod', or 'and' expected; found " + token);
+		processError("\"*\", \"div\", \"mod\", or \"and\" expected");
 
 	pushOperator(token);
 	nextToken();
 
 	if (token != "not" && token != "+" && token != "-" && token != "(" && token != "true" && token != "false"
 		&& !isInteger(token) && !isNonKeyId(token))
-		processError("'not', 'true', 'false', '(', '+', '-', non-keyword ID, or integer expected; found " + token);
+		processError("\"not\", \"true\", \"false\", \"(\", \"+\", \"-\", integer, or non - keyword identifier expected");
 	else part();
 
 	operand1 = popOperand();
@@ -423,10 +423,10 @@ void Compiler::part() {           // stage 1, production 15
 			nextToken();
 			if (token != "not" && token != "true" && token != "false" && token != "(" && token != "+"
 				&& token != "-" && !isInteger(token) && !isNonKeyId(token))
-				processError("'not', 'true', 'false', '(', '+', '-', integer, or non-keyword id expected; found " + token);
+				processError("\"not\", \"true\", \"false\", \"(\", \"+\", \"-\", integer, or non - keyword identifier expected");
 			express();
 			if (token != ")")
-				processError(") expected");
+				processError(") expected; found " + token);
 			nextToken();
 			code("not", popOperand());
 		}
@@ -455,7 +455,7 @@ void Compiler::part() {           // stage 1, production 15
 			nextToken();
 			if (token != "not" && token != "true" && token != "false" && token != "(" && token != "+"
 				&& token != "-" && !isInteger(token) && !isNonKeyId(token))
-				processError("'not', 'true', 'false', '(', '+', '-', integer, or non-keyword id expected; found " + token);
+				processError("\"not\", \"true\", \"false\", \"(\", \"+\", \"-\", integer, or non - keyword identifier expected");
 			express();
 			if (token != ")")
 				processError("expected ')'; found " + token);
@@ -474,7 +474,7 @@ void Compiler::part() {           // stage 1, production 15
 			nextToken();
 			if (token != "not" && token != "true" && token != "false" && token != "(" && token != "+"
 				&& token != "-" && !isInteger(token) && !isNonKeyId(token))
-				processError("'not', 'true', 'false', '(', '+', '-', integer, or non-keyword id expected; found " + token);
+				processError("\"not\", \"true\", \"false\", \"(\", \"+\", \"-\", integer, or non - keyword identifier expected");
 			express();
 			if (token != ")")
 				processError("expected ')'; found " + token);
@@ -495,9 +495,9 @@ void Compiler::part() {           // stage 1, production 15
 		nextToken();
 		if (token != "not" && token != "true" && token != "false" && token != "(" && token != "+"
 			&& token != "-" && !isInteger(token) && !isNonKeyId(token))
-			processError("'not', 'true', 'false', '(', '+', '-', integer, or non-keyword id expected; found " + token);
+			processError("\"not\", \"true\", \"false\", \"(\", \"+\", \"-\", integer, or non - keyword identifier expected");
 		express();
-		if (token != ")") processError(") expected");
+		if (token != ")") processError(") expected; found " + token);
 		nextToken();
 	}
 
@@ -506,7 +506,7 @@ void Compiler::part() {           // stage 1, production 15
 		nextToken();
 	}
 
-	else processError("'not', '+', '-' '(', or integer, boolean, or non-keyword expected; found " + token);
+	else processError("\"not\", \"true\", \"false\", \"(\", \"+\", \"-\", integer, boolean, or non - keyword identifier expected");
 }
 
 // Helper functions for the Pascallite lexicon
@@ -597,7 +597,7 @@ void Compiler::insert(string externalName, storeTypes inType, modes inMode, stri
 
 		if (name != "")	{
 			if (symbolTable.count(name) > 0)
-				processError("symbol " + name + " is multiply defined");
+				processError("multiple name definition");
 			else if (isKeyword(name) && name != "true" && name != "false")
 				processError("illegal use of keyword");
 			else //create table entry
@@ -939,7 +939,7 @@ void Compiler::emitAdditionCode(string operand1, string operand2) {       // op2
 
 	if (symbolTable.at(operand1).getDataType() != storeTypes::INTEGER 
 		&& symbolTable.at(operand2).getDataType() != storeTypes::INTEGER)
-		processError("binary '+' requires integer operands");
+		processError("illegal type");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName() 
 		&& contentsOfAReg != symbolTable.at(operand2).getInternalName())
@@ -981,7 +981,7 @@ void Compiler::emitSubtractionCode(string operand1, string operand2) {    // op2
 
 	if (symbolTable.at(operand1).getDataType() != storeTypes::INTEGER
 		&& symbolTable.at(operand2).getDataType() != storeTypes::INTEGER)
-		processError("binary '-' requires integer operands");
+		processError("illegal type");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand2).getInternalName())
 	{
@@ -1017,7 +1017,7 @@ void Compiler::emitMultiplicationCode(string operand1, string operand2) { // op2
 
 	if (symbolTable.at(operand1).getDataType() != storeTypes::INTEGER &&
 		symbolTable.at(operand2).getDataType() != storeTypes::INTEGER)
-		processError("binary '*' requires integer operands");
+		processError("illegal type");
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName() 
 		&& contentsOfAReg != symbolTable.at(operand2).getInternalName()) {
 		emit("", "mov", "[" + contentsOfAReg + "],eax", "; deassign AReg");
@@ -1054,7 +1054,7 @@ void Compiler::emitDivisionCode(string operand1, string operand2) { // op2 / op1
 	
 	if (symbolTable.at(operand1).getDataType() != storeTypes::INTEGER &&
 		symbolTable.at(operand2).getDataType() != storeTypes::INTEGER)
-		processError("binary '/' requires integer operands");
+		processError("illegal type");
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand2).getInternalName()) {
 		emit("", "mov", "[" + contentsOfAReg + "],eax", "; deassign AReg");
 		symbolTable.at(contentsOfAReg).setAlloc(allocation::YES);
@@ -1085,7 +1085,7 @@ void Compiler::emitModuloCode(string operand1, string operand2) {         // op2
 	
 	if (symbolTable.at(operand1).getDataType() != storeTypes::INTEGER
 		|| symbolTable.at(operand2).getDataType() != storeTypes::INTEGER)
-		processError("binary '/' requires integer operands");
+		processError("illegal type");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand2).getInternalName())
 	{
@@ -1119,7 +1119,7 @@ void Compiler::emitModuloCode(string operand1, string operand2) {         // op2
 void Compiler::emitNegationCode(string operand1, string) {           // -op1
 	
 	if (symbolTable.at(operand1).getDataType() != storeTypes::INTEGER)
-		processError("binary 'neg' requires integer operands");
+		processError("illegal type");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName()) {
 		emit("", "mov", "[" + contentsOfAReg + "],eax", "; deassign AReg");
@@ -1147,7 +1147,7 @@ void Compiler::emitNegationCode(string operand1, string) {           // -op1
 void Compiler::emitNotCode(string operand1, string) {                // !op1
 	
 	if (symbolTable.at(operand1).getDataType() != storeTypes::BOOLEAN)
-		processError("binary 'not' requires boolean operands");
+		processError("illegal type");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName()) {
 		emit("", "mov", "[" + contentsOfAReg + "],eax", "; deassign AReg");
@@ -1176,7 +1176,7 @@ void Compiler::emitAndCode(string operand1, string operand2) {            // op2
 	
 	if (symbolTable.at(operand1).getDataType() != storeTypes::BOOLEAN &&
 		symbolTable.at(operand2).getDataType() != storeTypes::BOOLEAN)
-		processError("binary 'and' requires boolean operands");
+		processError("illegal type");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName() 
 		&& contentsOfAReg != symbolTable.at(operand2).getInternalName()) {
@@ -1214,7 +1214,7 @@ void Compiler::emitOrCode(string operand1, string operand2) {             // op2
 	
 	if (symbolTable.at(operand1).getDataType() != storeTypes::BOOLEAN &&
 		symbolTable.at(operand2).getDataType() != storeTypes::BOOLEAN)
-		processError("binary 'or' requires boolean operands");
+		processError("illegal type");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName() 
 		&& contentsOfAReg != symbolTable.at(operand2).getInternalName()) {
