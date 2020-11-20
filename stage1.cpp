@@ -239,11 +239,9 @@ void Compiler::assignStmt() {     // stage 1, production 4
 	nextToken();
 
 	if (token != "not" && token != "true" && token != "false" && token != "(" && token != "+"
-		&& token != "-" && !isInteger(token) && !isNonKeyId(token))
-		processError("\"not\", \"true\", \"false\", \"(\", \"+\", \"-\", integer, or non - keyword identifier expected");
+		&& token != "-" && !isInteger(token) && !isNonKeyId(token) && token != ";")
+		processError("one of \"*\", \"and\", \"div\", \"mod\", \")\", \"+\", \"-\", \";\", \"<\", \"<=\", \"<>\", \"=\", \">\", \">=\", or \"or\" expected");
 	else express();
-
-	if (token != ";") processError("';' expected; found " + token);
 
 	secondOperand = popOperand();
 	firstOperand = popOperand();

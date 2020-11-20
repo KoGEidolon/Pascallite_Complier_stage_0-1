@@ -171,7 +171,7 @@ public:
   void emitAndCode(string operand1, string operand2);            // op2 && op1
   void emitOrCode(string operand1, string operand2);             // op2 || op1
   void emitEqualityCode(string operand1, string operand2);       // op2 == op1
-  void emitInequalityCode(string operand1, string operand2);     // op2 != op1
+  void emitInequalityCode(string operand1, string operand2);     // op2 <> op1
   void emitLessThanCode(string operand1, string operand2);       // op2 <  op1
   void emitLessThanOrEqualToCode(string operand1, string operand2); // op2 <= op1
   void emitGreaterThanCode(string operand1, string operand2);    // op2 >  op1
