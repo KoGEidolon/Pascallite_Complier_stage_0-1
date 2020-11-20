@@ -465,6 +465,8 @@ void Compiler::part() {           // stage 1, production 15
 			pushOperand(token);
 			nextToken();
 		}
+
+		else processError("expected '(', integer, or non-keyword id; found " + token);
 	}
 
 	else if (token == "-")
@@ -813,7 +815,7 @@ void Compiler::emitReadCode(string operand, string) {
 		if (name != "") {
 
 			if (symbolTable.count(name) == 0)
-				processError("reference to undefined symbol");
+				processError("reference to undefined symbol " + name);
 			if (symbolTable.at(name).getDataType() != storeTypes::INTEGER)
 				processError("can't read variables of this type");
 			if (symbolTable.at(name).getMode() != modes::VARIABLE)
@@ -829,7 +831,7 @@ void Compiler::emitReadCode(string operand, string) {
 	if (name != "") {
 
 		if (symbolTable.count(name) == 0)
-			processError("reference to undefined symbol");
+			processError("reference to undefined symbol " + name);
 		if (symbolTable.at(name).getDataType() != storeTypes::INTEGER)
 			processError("can't read variables of this type");
 		if (symbolTable.at(name).getMode() != modes::VARIABLE)
@@ -853,7 +855,7 @@ void Compiler::emitWriteCode(string operand, string) {
 
 		if (name != "") {
 			if (symbolTable.count(name) == 0)
-				processError("reference to undefined symbol");
+				processError("reference to undefined symbol " + name);
 			if (symbolTable.at(name).getInternalName() != contentsOfAReg) {
 				emit("", "mov", "eax,[" + symbolTable.at(name).getInternalName() + "]", "; load " + name + " in eax");
 				contentsOfAReg = symbolTable.at(name).getInternalName();
@@ -888,7 +890,7 @@ void Compiler::emitWriteCode(string operand, string) {
 	} // end for loop
 
 	if (symbolTable.count(name) == 0)
-		processError("reference to undefined symbol");
+		processError("reference to undefined symbol " + name);
 	if (symbolTable.at(name).getInternalName() != contentsOfAReg) {
 		emit("", "mov", "eax,[" + symbolTable.at(name).getInternalName() + "]", "; load " + name + " in eax");
 		contentsOfAReg = symbolTable.at(name).getInternalName();
@@ -921,14 +923,24 @@ void Compiler::emitWriteCode(string operand, string) {
 }
 
 void Compiler::emitAssignCode(string operand1, string operand2) {         // op2 = op1
+
+	if (symbolTable.count(operand1) == 0)
+		processError("reference to undefined symbol " + operand1);
+	else if (symbolTable.count(operand2) == 0)
+		processError("reference to undefined symbol " + operand2);
+
 	if (symbolTable.at(operand1).getDataType() != symbolTable.at(operand2).getDataType())
-		processError("incompatible types");
+		processError("incompatible types for operator ':='");
+
 	if (symbolTable.at(operand2).getMode() != modes::VARIABLE)
-		processError("symbol on left-hand size of assignment must have a storage mode of VARIABLE");
+		processError("symbol on left-hand side of assignment must have a storage mode of VARIABLE");
+
 	if (operand1 == operand2) return;
+
 	if (symbolTable.at(operand1).getInternalName() != contentsOfAReg)
 		emit("", "mov", "eax,[" + symbolTable.at(operand1).getInternalName() + "]", "; AReg = " + operand1);
 	emit("", "mov", "[" + symbolTable.at(operand2).getInternalName() + "],eax", "; " + operand2 + " = AReg");
+
 	contentsOfAReg = symbolTable.at(operand2).getInternalName();
 	
 	if (operand1[0] == 'T')
@@ -937,9 +949,14 @@ void Compiler::emitAssignCode(string operand1, string operand2) {         // op2
 
 void Compiler::emitAdditionCode(string operand1, string operand2) {       // op2 + op1
 
+	if (symbolTable.count(operand1) == 0)
+		processError("reference to undefined symbol " + operand1);
+	else if (symbolTable.count(operand2) == 0)
+		processError("reference to undefined symbol " + operand2);
+
 	if (symbolTable.at(operand1).getDataType() != storeTypes::INTEGER 
-		&& symbolTable.at(operand2).getDataType() != storeTypes::INTEGER)
-		processError("illegal type");
+		|| symbolTable.at(operand2).getDataType() != storeTypes::INTEGER)
+		processError("binary '+' requires integer operands");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName() 
 		&& contentsOfAReg != symbolTable.at(operand2).getInternalName())
@@ -979,9 +996,14 @@ void Compiler::emitAdditionCode(string operand1, string operand2) {       // op2
 
 void Compiler::emitSubtractionCode(string operand1, string operand2) {    // op2 - op1
 
+	if (symbolTable.count(operand1) == 0)
+		processError("reference to undefined symbol " + operand1);
+	else if (symbolTable.count(operand2) == 0)
+		processError("reference to undefined symbol " + operand2);
+
 	if (symbolTable.at(operand1).getDataType() != storeTypes::INTEGER
-		&& symbolTable.at(operand2).getDataType() != storeTypes::INTEGER)
-		processError("illegal type");
+		|| symbolTable.at(operand2).getDataType() != storeTypes::INTEGER)
+		processError("binary '-' requires integer operands");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand2).getInternalName())
 	{
@@ -1015,9 +1037,14 @@ void Compiler::emitSubtractionCode(string operand1, string operand2) {    // op2
 }
 void Compiler::emitMultiplicationCode(string operand1, string operand2) { // op2 * op1
 
-	if (symbolTable.at(operand1).getDataType() != storeTypes::INTEGER &&
+	if (symbolTable.count(operand1) == 0)
+		processError("reference to undefined symbol " + operand1);
+	else if (symbolTable.count(operand2) == 0)
+		processError("reference to undefined symbol " + operand2);
+
+	if (symbolTable.at(operand1).getDataType() != storeTypes::INTEGER ||
 		symbolTable.at(operand2).getDataType() != storeTypes::INTEGER)
-		processError("illegal type");
+		processError("binary '*' requires integer operands");
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName() 
 		&& contentsOfAReg != symbolTable.at(operand2).getInternalName()) {
 		emit("", "mov", "[" + contentsOfAReg + "],eax", "; deassign AReg");
@@ -1051,10 +1078,15 @@ void Compiler::emitMultiplicationCode(string operand1, string operand2) { // op2
 
 
 void Compiler::emitDivisionCode(string operand1, string operand2) { // op2 / op1
+
+	if (symbolTable.count(operand1) == 0)
+		processError("reference to undefined symbol " + operand1);
+	else if (symbolTable.count(operand2) == 0)
+		processError("reference to undefined symbol " + operand2);
 	
-	if (symbolTable.at(operand1).getDataType() != storeTypes::INTEGER &&
+	if (symbolTable.at(operand1).getDataType() != storeTypes::INTEGER ||
 		symbolTable.at(operand2).getDataType() != storeTypes::INTEGER)
-		processError("illegal type");
+		processError("binary 'div' requires integer operands");
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand2).getInternalName()) {
 		emit("", "mov", "[" + contentsOfAReg + "],eax", "; deassign AReg");
 		symbolTable.at(contentsOfAReg).setAlloc(allocation::YES);
@@ -1082,10 +1114,15 @@ void Compiler::emitDivisionCode(string operand1, string operand2) { // op2 / op1
 }
 
 void Compiler::emitModuloCode(string operand1, string operand2) {         // op2 % op1
+
+	if (symbolTable.count(operand1) == 0)
+		processError("reference to undefined symbol " + operand1);
+	else if (symbolTable.count(operand2) == 0)
+		processError("reference to undefined symbol " + operand2);
 	
 	if (symbolTable.at(operand1).getDataType() != storeTypes::INTEGER
 		|| symbolTable.at(operand2).getDataType() != storeTypes::INTEGER)
-		processError("illegal type");
+		processError("binary 'mod' requires integer operands");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand2).getInternalName())
 	{
@@ -1117,9 +1154,12 @@ void Compiler::emitModuloCode(string operand1, string operand2) {         // op2
 }
 
 void Compiler::emitNegationCode(string operand1, string) {           // -op1
+
+	if (symbolTable.count(operand1) == 0)
+		processError("reference to undefined symbol " + operand1);
 	
 	if (symbolTable.at(operand1).getDataType() != storeTypes::INTEGER)
-		processError("illegal type");
+		processError("binary '-' requires integer operands");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName()) {
 		emit("", "mov", "[" + contentsOfAReg + "],eax", "; deassign AReg");
@@ -1145,9 +1185,12 @@ void Compiler::emitNegationCode(string operand1, string) {           // -op1
 }
 
 void Compiler::emitNotCode(string operand1, string) {                // !op1
+
+	if (symbolTable.count(operand1) == 0)
+		processError("reference to undefined symbol " + operand1);
 	
 	if (symbolTable.at(operand1).getDataType() != storeTypes::BOOLEAN)
-		processError("illegal type");
+		processError("binary 'not' requires boolean operands");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName()) {
 		emit("", "mov", "[" + contentsOfAReg + "],eax", "; deassign AReg");
@@ -1173,10 +1216,15 @@ void Compiler::emitNotCode(string operand1, string) {                // !op1
 }
 
 void Compiler::emitAndCode(string operand1, string operand2) {            // op2 && op1
+
+	if (symbolTable.count(operand1) == 0)
+		processError("reference to undefined symbol " + operand1);
+	else if (symbolTable.count(operand2) == 0)
+		processError("reference to undefined symbol " + operand2);
 	
-	if (symbolTable.at(operand1).getDataType() != storeTypes::BOOLEAN &&
+	if (symbolTable.at(operand1).getDataType() != storeTypes::BOOLEAN ||
 		symbolTable.at(operand2).getDataType() != storeTypes::BOOLEAN)
-		processError("illegal type");
+		processError("binary 'and' requires boolean operands");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName() 
 		&& contentsOfAReg != symbolTable.at(operand2).getInternalName()) {
@@ -1211,10 +1259,15 @@ void Compiler::emitAndCode(string operand1, string operand2) {            // op2
 }
 
 void Compiler::emitOrCode(string operand1, string operand2) {             // op2 || op1
+
+	if (symbolTable.count(operand1) == 0)
+		processError("reference to undefined symbol " + operand1);
+	else if (symbolTable.count(operand2) == 0)
+		processError("reference to undefined symbol " + operand2);
 	
-	if (symbolTable.at(operand1).getDataType() != storeTypes::BOOLEAN &&
+	if (symbolTable.at(operand1).getDataType() != storeTypes::BOOLEAN ||
 		symbolTable.at(operand2).getDataType() != storeTypes::BOOLEAN)
-		processError("illegal type");
+		processError("binary 'or' requires boolean operands");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName() 
 		&& contentsOfAReg != symbolTable.at(operand2).getInternalName()) {
@@ -1251,8 +1304,10 @@ void Compiler::emitOrCode(string operand1, string operand2) {             // op2
 
 void Compiler::emitEqualityCode(string operand1, string operand2) {       // op2 == op1
 	
-	if (symbolTable.at(operand1).getDataType() != symbolTable.at(operand2).getDataType())
-		processError("incompatible types");
+	if (symbolTable.count(operand1) == 0)
+		processError("reference to undefined symbol " + operand1);
+	else if (symbolTable.count(operand2) == 0)
+		processError("reference to undefined symbol " + operand2);
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName() 
 		&& contentsOfAReg != symbolTable.at(operand2).getInternalName()) {
@@ -1277,7 +1332,13 @@ void Compiler::emitEqualityCode(string operand1, string operand2) {       // op2
 		emit("", "cmp", "eax,[" + symbolTable.at(operand2).getInternalName() + "]", "; compare " + operand1 + " and " + operand2);
 
 	string firstLabel = getLabel(), secondLabel = getLabel();
-	emit("", "je", "." + firstLabel , "; " + operand1 + " = " + operand2 + " then jump to set eax to TRUE");
+
+
+	if (contentsOfAReg == symbolTable.at(operand2).getInternalName())
+		emit("", "je", "." + firstLabel, "; if " + operand2 + " = " + operand1 + " then jump to set eax to TRUE");
+	else 
+		emit("", "je", "." + firstLabel, "; if " + operand1 + " = " + operand2 + " then jump to set eax to TRUE");
+
 	emit("", "mov", "eax,[FALSE]", "; else set eax to FALSE");
 
 	if (symbolTable.count("false") == 0) {
@@ -1305,9 +1366,14 @@ void Compiler::emitEqualityCode(string operand1, string operand2) {       // op2
 }
 
 void Compiler::emitInequalityCode(string operand1, string operand2) {     // op2 <> op1
+
+	if (symbolTable.count(operand1) == 0)
+		processError("reference to undefined symbol " + operand1);
+	else if (symbolTable.count(operand2) == 0)
+		processError("reference to undefined symbol " + operand2);
 	
 	if (symbolTable.at(operand1).getDataType() != symbolTable.at(operand2).getDataType())
-		processError("incompatible types");
+		processError("incompatible types for operator '<>'");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName() 
 		&& contentsOfAReg != symbolTable.at(operand2).getInternalName()) {
@@ -1332,7 +1398,12 @@ void Compiler::emitInequalityCode(string operand1, string operand2) {     // op2
 		emit("", "cmp", "eax,[" + symbolTable.at(operand2).getInternalName() + "]", "; compare " + operand1 + " and " + operand2);
 
 	string firstLabel = getLabel(), secondLabel = getLabel();
-	emit("", "jne", "." + firstLabel, "; if " + operand1 + " <> " + operand2 + " then jump to set eax to TRUE");
+
+	if (contentsOfAReg == symbolTable.at(operand2).getInternalName())
+		emit("", "jne", "." + firstLabel, "; if " + operand2 + " <> " + operand1 + " then jump to set eax to TRUE");
+	else
+		emit("", "jne", "." + firstLabel, "; if " + operand1 + " <> " + operand2 + " then jump to set eax to TRUE");
+
 	emit("", "mov", "eax,[FALSE]", "; else set eax to FALSE");
 
 	if (symbolTable.count("false") == 0) {
@@ -1360,9 +1431,14 @@ void Compiler::emitInequalityCode(string operand1, string operand2) {     // op2
 }
 
 void Compiler::emitLessThanCode(string operand1, string operand2) {       // op2 < op1
+
+	if (symbolTable.count(operand1) == 0)
+		processError("reference to undefined symbol " + operand1);
+	else if (symbolTable.count(operand2) == 0)
+		processError("reference to undefined symbol " + operand2);
 	
 	if (symbolTable.at(operand1).getDataType() != symbolTable.at(operand2).getDataType())
-		processError("incompatible types");
+		processError("incompatible types for operator '<'");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName()
 		&& contentsOfAReg != symbolTable.at(operand2).getInternalName()) {
@@ -1389,9 +1465,9 @@ void Compiler::emitLessThanCode(string operand1, string operand2) {       // op2
 	string firstLabel = getLabel(), secondLabel = getLabel();
 
 	if (contentsOfAReg == symbolTable.at(operand2).getInternalName())
-		emit("", "jl", "." + firstLabel, "; if " + operand1 + " < " + operand2 + " then jump to set eax to TRUE");
-	else 
 		emit("", "jl", "." + firstLabel, "; if " + operand2 + " < " + operand1 + " then jump to set eax to TRUE");
+	else 
+		emit("", "jl", "." + firstLabel, "; if " + operand1 + " < " + operand2 + " then jump to set eax to TRUE");
 
 	emit("", "mov", "eax,[FALSE]", "; else set eax to FALSE");
 
@@ -1420,9 +1496,14 @@ void Compiler::emitLessThanCode(string operand1, string operand2) {       // op2
 }
 
 void Compiler::emitLessThanOrEqualToCode(string operand1, string operand2) { // op2 <= op1
+
+	if (symbolTable.count(operand1) == 0)
+		processError("reference to undefined symbol " + operand1);
+	else if (symbolTable.count(operand2) == 0)
+		processError("reference to undefined symbol " + operand2);
 	
 	if (symbolTable.at(operand1).getDataType() != symbolTable.at(operand2).getDataType())
-		processError("incompatible types");
+		processError("incompatible types for operator '<='");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName() 
 		&& contentsOfAReg != symbolTable.at(operand2).getInternalName()) {
@@ -1449,9 +1530,9 @@ void Compiler::emitLessThanOrEqualToCode(string operand1, string operand2) { // 
 	string firstLabel = getLabel(), secondLabel = getLabel();
 
 	if (contentsOfAReg == symbolTable.at(operand2).getInternalName())
-		emit("", "jle", "." + firstLabel, "; if " + operand1 + " <= " + operand2 + " then jump to set eax to TRUE");
-	else
 		emit("", "jle", "." + firstLabel, "; if " + operand2 + " <= " + operand1 + " then jump to set eax to TRUE");
+	else
+		emit("", "jle", "." + firstLabel, "; if " + operand1 + " <= " + operand2 + " then jump to set eax to TRUE");
 
 	emit("", "mov", "eax,[FALSE]", "; else set eax to FALSE");
 
@@ -1480,9 +1561,14 @@ void Compiler::emitLessThanOrEqualToCode(string operand1, string operand2) { // 
 }
 
 void Compiler::emitGreaterThanCode(string operand1, string operand2) {    // op2 > op1
+
+	if (symbolTable.count(operand1) == 0)
+		processError("reference to undefined symbol " + operand1);
+	else if (symbolTable.count(operand2) == 0)
+		processError("reference to undefined symbol " + operand2);
 	
 	if (symbolTable.at(operand1).getDataType() != symbolTable.at(operand2).getDataType())
-		processError("incompatible types");
+		processError("incompatible types for operator '>'");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName()
 		&& contentsOfAReg != symbolTable.at(operand2).getInternalName()) {
@@ -1509,9 +1595,9 @@ void Compiler::emitGreaterThanCode(string operand1, string operand2) {    // op2
 	string firstLabel = getLabel(), secondLabel = getLabel();
 
 	if (contentsOfAReg == symbolTable.at(operand2).getInternalName())
-		emit("", "jg", "." + firstLabel, "; if " + operand1 + " > " + operand2 + " then jump to set eax to TRUE");
-	else
 		emit("", "jg", "." + firstLabel, "; if " + operand2 + " > " + operand1 + " then jump to set eax to TRUE");
+	else
+		emit("", "jg", "." + firstLabel, "; if " + operand1 + " > " + operand2 + " then jump to set eax to TRUE");
 
 	emit("", "mov", "eax,[FALSE]", "; else set eax to FALSE");
 
@@ -1540,9 +1626,14 @@ void Compiler::emitGreaterThanCode(string operand1, string operand2) {    // op2
 }
 
 void Compiler::emitGreaterThanOrEqualToCode(string operand1, string operand2) { // op2 >= op1
+
+	if (symbolTable.count(operand1) == 0)
+		processError("reference to undefined symbol " + operand1);
+	else if (symbolTable.count(operand2) == 0)
+		processError("reference to undefined symbol " + operand2);
 	
 	if (symbolTable.at(operand1).getDataType() != symbolTable.at(operand2).getDataType())
-		processError("incompatible types");
+		processError("incompatible types for operator '>='");
 
 	if (contentsOfAReg[0] == 'T' && contentsOfAReg != symbolTable.at(operand1).getInternalName() 
 		&& contentsOfAReg != symbolTable.at(operand2).getInternalName()) {
@@ -1569,9 +1660,9 @@ void Compiler::emitGreaterThanOrEqualToCode(string operand1, string operand2) { 
 	string firstLabel = getLabel(), secondLabel = getLabel();
 
 	if (contentsOfAReg == symbolTable.at(operand2).getInternalName())
-		emit("", "jge", "." + firstLabel, "; if " + operand1 + " >= " + operand2 + " then jump to set eax to TRUE");
-	else
 		emit("", "jge", "." + firstLabel, "; if " + operand2 + " >= " + operand1 + " then jump to set eax to TRUE");
+	else
+		emit("", "jge", "." + firstLabel, "; if " + operand1 + " >= " + operand2 + " then jump to set eax to TRUE");
 
 	emit("", "mov", "eax,[FALSE]", "; else set eax to FALSE");
 

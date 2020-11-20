@@ -161,11 +161,11 @@ public:
   void emitReadCode(string operand, string = "");
   void emitWriteCode(string operand, string = "");
   void emitAssignCode(string operand1, string operand2);         // op2 = op1
-  void emitAdditionCode(string operand1, string operand2);       // op2 +  op1
-  void emitSubtractionCode(string operand1, string operand2);    // op2 -  op1
-  void emitMultiplicationCode(string operand1, string operand2); // op2 *  op1
-  void emitDivisionCode(string operand1, string operand2);       // op2 /  op1
-  void emitModuloCode(string operand1, string operand2);         // op2 %  op1
+  void emitAdditionCode(string operand1, string operand2);       // op2 + op1
+  void emitSubtractionCode(string operand1, string operand2);    // op2 - op1
+  void emitMultiplicationCode(string operand1, string operand2); // op2 * op1
+  void emitDivisionCode(string operand1, string operand2);       // op2 / op1
+  void emitModuloCode(string operand1, string operand2);         // op2 % op1
   void emitNegationCode(string operand1, string = "");           // -op1
   void emitNotCode(string operand1, string = "");                // !op1
   void emitAndCode(string operand1, string operand2);            // op2 && op1

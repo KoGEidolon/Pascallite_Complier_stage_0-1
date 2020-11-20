@@ -1,0 +1,13 @@
+STAGE1:  Huan Tran & Duc Huy Nguyen       Thu Nov 19 17:29:24 2020
+
+LINE NO.              SOURCE STATEMENT
+
+    1|program stage1no108;
+    2|  const w=3;x=true;
+    3|  var   a,b,c,d,e:integer;
+    4|  begin
+    5|    read(a);
+    6|    d := a+x; 
+Error: Line 6: illegal type
+
+COMPILATION TERMINATED      1 ERROR ENCOUNTERED
